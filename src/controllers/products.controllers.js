@@ -1,4 +1,4 @@
-import db from "../database/database.connection.js";
+import { findId, findProduct, findProductId, findToken, insertProduct, putProductFalse, putProductTrue } from "../repository/products.repository.js";
 
 export async function getProducts (req,res){
 	const { authorization } = req.headers
@@ -8,10 +8,12 @@ export async function getProducts (req,res){
 	if(!token) return res.status(401).send("Envie o token na requisição")
 
     try{
-		const session = await db.query(`SELECT * FROM sessions WHERE token = '${token}';`)
+		const session = await findToken(token)
 		if(session.rows.length === 0) return res.status(401).send("Envie um token valido")
 
-		const products = await db.query(`SELECT * FROM products WHERE "userID" = ${session.rows[0].userID} AND "isActive"=true;`)
+		const userID = session.rows[0].userID
+
+		const products = await findProduct(userID)
 
 		res.send(products.rows)
 
@@ -28,10 +30,11 @@ export async function getAllProducts(req,res){
 	if(!token) return res.status(401).send("Envie o token na requisição")
 
     try{
-		const session = await db.query(`SELECT * FROM sessions WHERE token = '${token}';`)
+		const session = await findToken(token)
 		if(session.rows.length === 0) return res.status(401).send("Envie um token valido")
 
-		const products = await db.query(`SELECT * FROM products WHERE "userID" = ${session.rows[0].userID};`)
+		const userID = session.rows[0].userID
+		const products = await findProductId(userID)
 
 		res.send(products.rows)
 
@@ -44,13 +47,13 @@ export async function isActive(req,res){
 	const { id } = req.params;
 
     try{
-		const existProduct = await db.query(`SELECT * FROM products WHERE id = '${id}';`)
+		const existProduct = await findId(id)
 		if(existProduct.rows.length === 0 ) return res.status(409).send("Produto não encontrado")
 		
 		if(existProduct.rows[0].isActive === true){
-			await db.query(`UPDATE products SET "isActive"= false  WHERE id = $1;`,[id]);
+			await putProductFalse(id)
 		}else{
-			await db.query(`UPDATE products SET "isActive"= true  WHERE id = $1;`,[id]);
+			await putProductTrue(id)
 		}
 
 		res.sendStatus(200)
@@ -70,12 +73,11 @@ export async function postProducts (req,res){
 	if(!token) return res.status(401).send("Envie o token na requisição")
 
     try{
-		const session = await db.query(`SELECT * FROM sessions WHERE token = '${token}';`)
+		const session = await findToken(token)
 		if(session.rows.length === 0) return res.status(401).send("Envie um token valido")
 		
-		const newProduct = await db.query(
-			`INSERT INTO products ("userID", name, image, description, price) VALUES ('${session.rows[0].userID}','${name}', '${image}', '${description}', '${price}');`
-		)
+		const userID = session.rows[0].userID
+		const newProduct = await insertProduct(userID, name, image, description, price)
 
 		res.status(201).send(newProduct)
 	} catch (err) {
