@@ -23,17 +23,19 @@ export async function postSignUp (req, res){
 export async function postSignIn (req, res){
 	const { email, password } = req.body
 	console.log(req.body);
+
 	try{
 		const user = await getUserEmail(email)
 		if (user.rows.length === 0) return res.status(401).send("Usuario não cadastrado")
-		
+		console.log(password)
+		console.log(user.rows);
 		const passwordIsCorrect = bcrypt.compareSync(password, user.rows[0].password)
 		if (!passwordIsCorrect) return res.status(401).send("Senha incorreta")
 
 		const token = uuid()
 		const obj ={ token:token }
 		const userID = user.rows[0].id
-		
+
 		await insertSession(userID,token)
 
 		res.status(200).send(obj)

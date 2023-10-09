@@ -34,3 +34,8 @@ export function  insertProduct(userID, name, image, description, price){
     const result = db.query(`INSERT INTO products ("userID", name, image, description, price) VALUES ('${userID}','${name}', '${image}', '${description}', '${price}');`)
     return result
 }
+
+export function findUser(userID){
+    const result = db.query(`SELECT * FROM users WHERE id = ${userID};`)
+    return result
+}

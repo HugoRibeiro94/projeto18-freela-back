@@ -1,4 +1,4 @@
-import { findId, findProduct, findProductId, findToken, insertProduct, putProductFalse, putProductTrue } from "../repository/products.repository.js";
+import { findId, findProduct, findProductId, findToken, findUser, insertProduct, putProductFalse, putProductTrue } from "../repository/products.repository.js";
 
 export async function getProducts (req,res){
 	const { authorization } = req.headers
@@ -80,6 +80,31 @@ export async function postProducts (req,res){
 		const newProduct = await insertProduct(userID, name, image, description, price)
 
 		res.status(201).send(newProduct)
+	} catch (err) {
+		res.status(500).send(err.message)
+	}
+}
+
+export async function getProductsId(req,res){
+	const { id } = req.params;
+
+    try{
+		const existProduct = await findId(id)
+		if(existProduct.rows.length === 0 ) return res.status(409).send("Produto não encontrado")
+		console.log(existProduct.rows);
+		
+		const userID = existProduct.rows[0].userID
+		const user = await findUser(userID)
+		console.log(user.rows);
+
+		const obj = {
+			...existProduct.rows[0],
+			nameUsuario:user.rows[0].name,
+			email:user.rows[0].email,
+			phone:user.rows[0].phone
+		}
+		console.log(obj);
+		res.send(obj)
 	} catch (err) {
 		res.status(500).send(err.message)
 	}

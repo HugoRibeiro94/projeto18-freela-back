@@ -1,7 +1,7 @@
 import db from "../database/database.connection.js";
 
 export function getUserEmail(email){
-    const result = db.query(`SELECT email FROM users WHERE email = '${email}';`)
+    const result = db.query(`SELECT * FROM users WHERE email = '${email}';`)
     return result;
 }
 
